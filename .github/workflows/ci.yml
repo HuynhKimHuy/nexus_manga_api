@@ -58,9 +58,9 @@ jobs:
       - name: Test migration rollback
         run: |
           npm run migration:revert
-            npm run migration:run
-            - name: Verify mangas table
-              run: |
+          npm run migration:run
+          - name: Verify mangas table
+            run: |
           psql --version
           PGPASSWORD="$POSTGRES_PASSWORD" psql \
           -h "$POSTGRES_HOST" \
