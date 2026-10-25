@@ -1,0 +1,12 @@
+name: hello-ci
+
+on:
+  pull_request:
+    branches: [main,develop]
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Run Hello
+        run: echo "Hello"
