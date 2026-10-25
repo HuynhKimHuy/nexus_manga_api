@@ -25,6 +25,8 @@ jobs:
         run: npm ci
       - name: Lint source code
         run: npm run lint
+      - name: TypeScript typecheck
+        run: npm run typecheck
       - name: List repository files
         run: ls -la
       - name: Run Hello
