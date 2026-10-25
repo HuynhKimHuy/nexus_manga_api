@@ -1,5 +1,8 @@
 name: hello-ci
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [main,develop]
@@ -8,5 +11,9 @@ jobs:
   say-hello:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: List repository files
+        run: ls -la
       - name: Run Hello
         run: echo "Hello"
