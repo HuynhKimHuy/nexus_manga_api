@@ -53,6 +53,16 @@ jobs:
         run: npm run build
       - name: Run PostgreSQL migrations
         run: npm run migration:run
+      - name: Verify mangas table
+        run: |
+          psql --version
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+          -h "$POSTGRES_HOST" \
+          -p "$POSTGRES_PORT" \
+          -U "$POSTGRES_USER" \
+          -d "$POSTGRES_DB" \
+          -v ON_ERROR_STOP=1 \
+          -c "SELECT COUNT(*) FROM public.tbl_mangas;"
       - name: Run unit tests
         run: npm test
       - name: Run e2e tests with PostgreSQL
