@@ -59,8 +59,8 @@ jobs:
         run: |
           npm run migration:revert
           npm run migration:run
-          - name: Verify mangas table
-            run: |
+      - name: Verify mangas table
+        run: |
           psql --version
           PGPASSWORD="$POSTGRES_PASSWORD" psql \
           -h "$POSTGRES_HOST" \
