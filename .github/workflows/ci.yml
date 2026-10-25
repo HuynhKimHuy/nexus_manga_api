@@ -53,6 +53,8 @@ jobs:
         run: npm run build
       - name: Run PostgreSQL migrations
         run: npm run migration:run
+      - name: Verify migration re-run
+        run: npm run migration:run
       - name: Verify mangas table
         run: |
           psql --version
