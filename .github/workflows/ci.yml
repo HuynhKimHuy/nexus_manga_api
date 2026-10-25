@@ -27,6 +27,8 @@ jobs:
         run: npm run lint
       - name: TypeScript typecheck
         run: npm run typecheck
+      - name: Build NestJS
+        run: npm run build
       - name: List repository files
         run: ls -la
       - name: Run Hello
