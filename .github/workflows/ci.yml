@@ -23,6 +23,8 @@ jobs:
           npm --version
       - name: Install dependencies
         run: npm ci
+      - name: Lint source code
+        run: npm ci
       - name: List repository files
         run: ls -la
       - name: Run Hello
