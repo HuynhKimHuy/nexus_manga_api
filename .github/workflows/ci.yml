@@ -73,3 +73,5 @@ jobs:
         run: npm test
       - name: Run e2e tests with PostgreSQL
         run: npm run test:e2e
+      - name: Build Docker image
+        run: docker build --progress=plain -t nexus-manga-api:ci .
