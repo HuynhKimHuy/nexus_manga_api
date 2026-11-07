@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envSchema } from './config/env.schema.js';
 import { envFilePaths } from './config/env.paths.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Mangas } from './modules/mangas/mangas.entity.js';
+import { MangasModule } from './modules/mangas/mangas.module.js';
 
 @Module({
   imports: [
@@ -26,9 +28,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         database: config.getOrThrow<string>('POSTGRES_DB'),
         synchronize: false,
         migrationsRun: false,
-        entities: [],
+        entities: [Mangas],
       }),
     }),
+    MangasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
