@@ -39,12 +39,18 @@ describe.skipIf(!postgresTestsEnabled)('Mangas API (PostgreSQL 18)', () => {
     const response = await request(app.getHttpServer())
       .get('/mangas')
       .expect(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body).toEqual(
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: seeded.id, slug: seeded.slug }),
       ]),
     );
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: expect.any(Number),
+      totalPages: expect.any(Number),
+    });
   });
 
   it('E02 GET /mangas/:id returns 200 for an existing UUID', async () => {
