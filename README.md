@@ -47,6 +47,27 @@ From the workspace directory, use `docker compose up -d postgres` to create or
 update the container, `docker compose stop postgres` to stop it, and
 `docker compose start postgres` to start it again. Automatic restart is disabled.
 
+## Run with Docker
+
+Build from the backend directory:
+
+```bash
+docker build -f dockerfile -t nexus-manga-api .
+docker run --rm --env-file .env -p 3000:3000 nexus-manga-api
+```
+
+Create `.env` from `.env.example` and set `POSTGRES_HOST` and `POSTGRES_PORT`
+to a PostgreSQL address reachable from the container. `127.0.0.1` inside the
+API container refers to that container. When sharing a Docker network with the
+workspace PostgreSQL service, use `POSTGRES_HOST=postgres` and
+`POSTGRES_PORT=5432`, and pass `--network <network-name>` to `docker run`.
+
+The image runs compiled JavaScript as the unprivileged `node` user and includes
+only production dependencies. Environment files are excluded from the image.
+Apply database migrations separately before starting the API; the existing
+`npm run migration:run` command runs from the backend directory with development
+dependencies installed and database connection variables set.
+
 ## Database migrations
 
 Run these commands from the backend directory with the PostgreSQL environment
@@ -73,8 +94,9 @@ npm run migration:generate -- src/database/migrations/UpdateMangas
 Migration files in `src/database/migrations` are discovered automatically. The
 scripts run TypeScript directly with the ESM loader; no build is required.
 `migration:create` works without a database connection. The other commands need
-PostgreSQL running. Before using `migration:generate`, register your entities in
-`src/database/data-source.ts`; its `entities` array is currently empty.
+PostgreSQL running. The `Mangas` entity is registered in both
+`src/database/data-source.ts` and `src/app.module.ts`. Register future entities
+in both configurations before using them or generating migrations.
 
 ## Code checks and formatting
 
