@@ -1,11 +1,9 @@
-import {
-  type INestApplication,
-  StandardSchemaValidationPipe,
-} from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { App } from 'supertest/types.js';
 import { DataSource } from 'typeorm';
 import { envSchema } from '../../src/config/env.schema.js';
+import { ZodValidationPipe } from '../../src/common/pipes/zod-validation.pipe.js';
 
 // Opt in explicitly. Never import AppModule (which reads .env) when skipped.
 export const postgresTestsEnabled = process.env.RUN_DB_TESTS === '1';
@@ -28,7 +26,7 @@ export async function createPostgresTestApp(): Promise<INestApplication<App>> {
   });
   try {
     // Match main.ts: module-only bootstrapping does not install global pipes.
-    app.useGlobalPipes(new StandardSchemaValidationPipe());
+    app.useGlobalPipes(new ZodValidationPipe());
     await app.init();
     const database = app.get(DataSource);
     expect(database.options.synchronize).toBe(false);
