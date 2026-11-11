@@ -1,12 +1,16 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envSchema } from './config/env.schema.js';
 import { envFilePaths } from './config/env.paths.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HttpLogginMiddleWare } from './common/middleware/http-login.middleware.js';
 import { Mangas } from './modules/mangas/mangas.entity.js';
 import { MangasModule } from './modules/mangas/mangas.module.js';
+import { RequestContextMiddleware } from './common/middleware/RequestExeptionMiddleware.js';
+import { APP_FILTER } from '@nestjs/core';
+import { GobalExeptionfilter } from './common/filter/gobal.exeption.js';
 
 @Module({
   imports: [
@@ -33,7 +37,20 @@ import { MangasModule } from './modules/mangas/mangas.module.js';
     }),
     MangasModule,
   ],
+
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: GobalExeptionfilter,
+    },
+    AppService,
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestContextMiddleware, HttpLogginMiddleWare)
+      .forRoutes('*');
+  }
+}

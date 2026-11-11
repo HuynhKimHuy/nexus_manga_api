@@ -1,4 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { BusinessException } from '../../common/exeptions/bussines.exeption.js';
+import { ErrorCode } from '../../common/filter/errors/error-code.js';
+import { QueryFailedError } from 'typeorm';
 import { Mangas, MangaStatus } from './mangas.entity.js';
 import { MangaRepo } from './mangas.repo.js';
 import { CreateMangaDto } from './dto/create-manga.dto.js';
@@ -16,13 +19,19 @@ export class MangaService {
   async findById(id: string): Promise<Mangas> {
     const manga = await this.mangaRepo.findById(id);
     if (!manga) {
-      throw new NotFoundException('manga not found');
+      throw new BusinessException(ErrorCode.MANGA_NOT_FOUND, {
+        resourceId: id,
+      });
     }
     return manga;
   }
 
   async createManga(dto: CreateMangaDto): Promise<Mangas> {
-    return this.mangaRepo.create(dto);
+    try {
+      return await this.mangaRepo.create(dto);
+    } catch (error) {
+      this.rethrowWriteError(error);
+    }
   }
 
   async findPaginated(
@@ -60,7 +69,9 @@ export class MangaService {
   async updateById(id: string, data: UpdateMangaDto): Promise<Mangas> {
     const manga = await this.mangaRepo.findById(id);
     if (!manga) {
-      throw new NotFoundException('manga not found');
+      throw new BusinessException(ErrorCode.MANGA_NOT_FOUND, {
+        resourceId: id,
+      });
     }
     const updateData = { ...data };
     if (updateData.slug === manga.slug) {
@@ -69,10 +80,36 @@ export class MangaService {
     if (Object.keys(updateData).length === 0) {
       return manga;
     }
-    const result = await this.mangaRepo.updateById(id, updateData);
+    const result = await this.mangaRepo
+      .updateById(id, updateData)
+      .catch((error: unknown) => {
+        this.rethrowWriteError(error, id);
+      });
     if (result.affected === 0) {
-      throw new NotFoundException('manga not found');
+      throw new BusinessException(ErrorCode.MANGA_NOT_FOUND, {
+        resourceId: id,
+      });
     }
     return this.findById(id);
+  }
+
+  private rethrowWriteError(error: unknown, resourceId?: string): never {
+    if (error instanceof QueryFailedError) {
+      const driverError = error.driverError as {
+        code?: string;
+        constraint?: string;
+      };
+      // Match the slug constraint created by the existing migration, not other unique violations.
+      if (
+        driverError.code === '23505' &&
+        driverError.constraint === 'tbl_mangas_slug_key'
+      ) {
+        throw new BusinessException(ErrorCode.MANGA_SLUG_ALREADY_EXISTS, {
+          resourceId,
+          cause: error,
+        });
+      }
+    }
+    throw error;
   }
 }

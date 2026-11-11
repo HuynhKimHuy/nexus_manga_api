@@ -13,7 +13,7 @@ export class MangaRepo {
   constructor(
     @InjectRepository(Mangas)
     private readonly mangaRepo: Repository<Mangas>,
-  ) { }
+  ) {}
 
   async findAll(): Promise<Mangas[]> {
     return this.mangaRepo.find();
