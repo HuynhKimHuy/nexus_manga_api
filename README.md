@@ -128,6 +128,21 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## API documentation (Swagger)
+
+After starting the API (`npm run start:dev`), open:
+
+- Swagger UI: <http://localhost:3000/docs>
+- OpenAPI JSON: <http://localhost:3000/docs-json>
+- OpenAPI YAML: <http://localhost:3000/docs-yaml>
+
+Use the configured `PORT` if it differs from `3000`. Swagger UI includes
+**Try it out** for calling the running API. Documentation covers the app routes
+and manga list/detail/create/update endpoints, including query parameters,
+request examples, responses, and error formats. Request schemas are generated
+from the same Zod schemas used for validation by NestJS Swagger's native Standard
+Schema support. Setup is in `src/config/swagger.config.ts`.
+
 ## Run tests
 
 ```bash
