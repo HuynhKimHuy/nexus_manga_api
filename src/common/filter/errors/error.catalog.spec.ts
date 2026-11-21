@@ -16,6 +16,12 @@ describe('ErrorCatalog', () => {
     ['HTTP_ERROR', 500, 'HTTP error'],
     ['MANGA_NOT_FOUND', 404, 'Manga not found'],
     ['MANGA_SLUG_ALREADY_EXISTS', 409, 'Manga slug already exists'],
+    ['CHAPTER_NOT_FOUND', 404, 'Chapter not found'],
+    [
+      'CHAPTER_NUMBER_ALREADY_EXISTS',
+      409,
+      'Chapter number already exists for this manga',
+    ],
     ['INTERNAL_ERROR', 500, 'Internal server error'],
     ['SERVICE_UNAVAILABLE', 503, 'Service unavailable'],
   ] as const)(

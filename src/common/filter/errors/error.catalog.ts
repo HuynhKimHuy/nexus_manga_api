@@ -17,6 +17,16 @@ export const ErrorCatalog = {
     message: 'Manga slug already exists',
   },
 
+  [ErrorCode.CHAPTER_NOT_FOUND]: {
+    status: HttpStatus.NOT_FOUND,
+    message: 'Chapter not found',
+  },
+
+  [ErrorCode.CHAPTER_NUMBER_ALREADY_EXISTS]: {
+    status: HttpStatus.CONFLICT,
+    message: 'Chapter number already exists for this manga',
+  },
+
   [ErrorCode.BAD_REQUEST]: {
     status: HttpStatus.BAD_REQUEST,
     message: 'Bad request',
