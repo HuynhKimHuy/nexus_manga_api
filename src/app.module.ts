@@ -11,6 +11,8 @@ import { MangasModule } from './modules/mangas/mangas.module.js';
 import { RequestContextMiddleware } from './common/middleware/RequestExeptionMiddleware.js';
 import { APP_FILTER } from '@nestjs/core';
 import { GobalExeptionfilter } from './common/filter/gobal.exeption.js';
+import { Chapters } from './modules/chapters/chapters.entity.js';
+import { ChaptersModule } from './modules/chapters/chapters.module.js';
 
 @Module({
   imports: [
@@ -32,10 +34,11 @@ import { GobalExeptionfilter } from './common/filter/gobal.exeption.js';
         database: config.getOrThrow<string>('POSTGRES_DB'),
         synchronize: false,
         migrationsRun: false,
-        entities: [Mangas],
+        entities: [Mangas, Chapters],
       }),
     }),
     MangasModule,
+    ChaptersModule,
   ],
 
   controllers: [AppController],
