@@ -1,3 +1,4 @@
+import { R2StorageService } from '../storage/r2-storage-service.js';
 import { HttpStatus } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { QueryFailedError } from 'typeorm';
@@ -19,16 +20,71 @@ describe('MangaService', () => {
     updateById: vi.fn<MangaRepo['updateById']>(),
   };
 
+  const storage = { uploadObject: vi.fn(), deleteObject: vi.fn() };
+
   beforeEach(async () => {
     vi.resetAllMocks();
     module = await Test.createTestingModule({
-      providers: [MangaService, { provide: MangaRepo, useValue: repository }],
+      providers: [
+        MangaService,
+        { provide: MangaRepo, useValue: repository },
+        { provide: R2StorageService, useValue: storage },
+      ],
     }).compile();
     service = module.get(MangaService);
   });
 
   afterEach(async () => {
     await module?.close();
+  });
+
+  const cover = {
+    buffer: Buffer.from('image'),
+    mimetype: 'image/png',
+  } as Express.Multer.File;
+
+  it('uploads the cover and persists its public URL', async () => {
+    const dto = { title: 'Manga', slug: 'manga' };
+    storage.uploadObject.mockResolvedValueOnce(
+      'https://images.example.com/cover.png',
+    );
+    repository.create.mockResolvedValueOnce(makeManga());
+    await service.createManga(dto, cover);
+    expect(storage.uploadObject).toHaveBeenCalledWith(
+      expect.stringMatching(/^mangas\/covers\/[0-9a-f-]+\.png$/),
+      cover.buffer,
+      'image/png',
+    );
+    expect(repository.create).toHaveBeenCalledWith({
+      ...dto,
+      coverImage: 'https://images.example.com/cover.png',
+    });
+    expect(storage.deleteObject).not.toHaveBeenCalled();
+  });
+
+  it('deletes the uploaded cover when database insertion fails', async () => {
+    storage.uploadObject.mockResolvedValueOnce(
+      'https://images.example.com/cover.png',
+    );
+    storage.deleteObject.mockResolvedValueOnce(undefined);
+    const error = new Error('Database failed');
+    repository.create.mockRejectedValueOnce(error);
+    await expect(
+      service.createManga({ title: 'Manga', slug: 'manga' }, cover),
+    ).rejects.toBe(error);
+    expect(storage.deleteObject).toHaveBeenCalledWith(
+      storage.uploadObject.mock.calls[0]?.[0],
+    );
+  });
+
+  it('does not insert a manga when upload fails', async () => {
+    const error = new Error('Upload failed');
+    storage.uploadObject.mockRejectedValueOnce(error);
+    await expect(
+      service.createManga({ title: 'Manga', slug: 'manga' }, cover),
+    ).rejects.toBe(error);
+    expect(repository.create).not.toHaveBeenCalled();
+    expect(storage.deleteObject).not.toHaveBeenCalled();
   });
 
   it('S01 findAll delegates to the repository and returns its list', async () => {

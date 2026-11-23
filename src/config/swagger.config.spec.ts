@@ -11,6 +11,10 @@ import { AppController } from '../app.controller.js';
 import { AppService } from '../app.service.js';
 import { MangaController } from '../modules/mangas/mangas.controller.js';
 import { MangaService } from '../modules/mangas/mangas.service.js';
+import { ChapterController } from '../modules/chapters/chapters.controller.js';
+import { ChapterService } from '../modules/chapters/chapter.service.js';
+import { ChapterPagesController } from '../modules/chapters/chapter-pages.controller.js';
+import { ChapterPagesService } from '../modules/chapters/chapter-pages.service.js';
 import { setupSwagger } from './swagger.config.js';
 
 describe('Swagger documentation', () => {
@@ -19,10 +23,17 @@ describe('Swagger documentation', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      controllers: [AppController, MangaController],
+      controllers: [
+        AppController,
+        MangaController,
+        ChapterController,
+        ChapterPagesController,
+      ],
       providers: [
         { provide: AppService, useValue: {} },
         { provide: MangaService, useValue: {} },
+        { provide: ChapterService, useValue: {} },
+        { provide: ChapterPagesService, useValue: {} },
       ],
     }).compile();
     app = module.createNestApplication<INestApplication<App>>({
@@ -203,5 +214,52 @@ describe('Swagger documentation', () => {
     expect(Object.keys(document.paths)).toEqual(
       expect.arrayContaining(['/', '/debug/db', '/mangas', '/mangas/{id}']),
     );
+  });
+
+  it('keeps multipart documentation for cover, page batch, and CBZ import', () => {
+    expect(document.paths['/mangas/{id}/cover']?.post).toMatchObject({
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              required: ['coverImage'],
+              properties: { coverImage: { format: 'binary' } },
+            },
+          },
+        },
+      },
+    });
+    expect(
+      document.paths['/mangas/{mangaId}/chapters/{chapterId}/pages']?.post,
+    ).toMatchObject({
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              required: ['images'],
+              properties: {
+                images: { type: 'array' },
+                startPage: { type: 'integer', default: 1 },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(
+      document.paths['/mangas/{mangaId}/chapters/{chapterId}/pages/import']
+        ?.post,
+    ).toMatchObject({
+      requestBody: {
+        content: {
+          'multipart/form-data': {
+            schema: {
+              required: ['archive'],
+              properties: { archive: { format: 'binary' } },
+            },
+          },
+        },
+      },
+    });
   });
 });

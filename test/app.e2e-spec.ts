@@ -13,6 +13,17 @@ describe.skipIf(!postgresTestsEnabled)('AppController (e2e)', () => {
     app = await createPostgresTestApp();
   }, 30000);
 
+  it('/health (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ok');
+        expect(typeof body.timestamp).toBe('string');
+        expect(body.uptimeSeconds).toBeGreaterThanOrEqual(0);
+      });
+  });
+
   it('/ (GET)', () => {
     return request(app.getHttpServer())
       .get('/')
