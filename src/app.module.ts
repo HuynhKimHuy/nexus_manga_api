@@ -13,6 +13,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { GobalExeptionfilter } from './common/filter/gobal.exeption.js';
 import { Chapters } from './modules/chapters/chapters.entity.js';
 import { ChaptersModule } from './modules/chapters/chapters.module.js';
+import { R2Module } from './modules/storage/r2.module.js';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ChaptersModule } from './modules/chapters/chapters.module.js';
     }),
     MangasModule,
     ChaptersModule,
+    R2Module
   ],
 
   controllers: [AppController],
