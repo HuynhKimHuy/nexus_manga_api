@@ -1,0 +1,27 @@
+# Start: docker compose up -d postgres
+# Stop: docker compose stop postgres
+# Start again: docker compose start postgres
+name: nexus-manga
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: 'no'
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexus_manga}
+      POSTGRES_USER: ${POSTGRES_USER:-nexus_manga}
+      # Local development default; override in the .env beside this file.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_manga_dev}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5544}:5432'
+    volumes:
+      # PostgreSQL 18+ stores versioned data under this directory.
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
