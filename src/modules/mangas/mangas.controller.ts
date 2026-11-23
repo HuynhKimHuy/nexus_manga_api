@@ -1,5 +1,10 @@
+import type {} from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   Body,
+  BadRequestException,
+  UploadedFile,
+  UseInterceptors,
   Controller,
   Get,
   Param,
@@ -8,22 +13,6 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBadRequestResponse,
-  ApiConflictResponse,
-  ApiCreatedResponse,
-  ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
-import { apiErrorResponseSchema } from '../../common/filter/errors/api-error.schema.js';
-import {
-  mangaResponseSchema,
-  paginatedMangasResponseSchema,
-} from './dto/manga-response.schema.js';
 import { MangaService } from './mangas.service.js';
 import {
   createMangaSchema,
@@ -37,31 +26,24 @@ import {
   updateMangaSchema,
   type UpdateMangaDto,
 } from './dto/update-manga.dto.js';
+import {
+  ApiCreateMangaDocs,
+  ApiGetMangaDocs,
+  ApiListMangasDocs,
+  ApiMangaControllerDocs,
+  ApiUpdateMangaDocs,
+  ApiUploadMangaCoverDocs,
+} from './docs/manga.swagger.js';
+
+const MAX_COVER_SIZE = 5 * 1024 * 1024;
 
 @Controller('mangas')
-@ApiTags('Mangas')
-@ApiBadRequestResponse({
-  description:
-    'VALIDATION_FAILED for invalid input, or BAD_REQUEST for an invalid UUID.',
-  standardSchema: apiErrorResponseSchema,
-})
-@ApiInternalServerErrorResponse({
-  description: 'INTERNAL_ERROR',
-  standardSchema: apiErrorResponseSchema,
-})
+@ApiMangaControllerDocs()
 export class MangaController {
   constructor(private readonly mangaService: MangaService) {}
-
+  //Find manga
   @Get()
-  @ApiOperation({
-    summary: 'List mangas with pagination and filters',
-    description:
-      'Filter by status or search by title (case-insensitive substring). Unknown query parameters are rejected.',
-  })
-  @ApiOkResponse({
-    description: 'Manga page and pagination metadata.',
-    standardSchema: paginatedMangasResponseSchema,
-  })
+  @ApiListMangasDocs()
   findPaginated(
     @Query({ schema: paginationQuerySchema }) query: PaginationQueryDto,
   ) {
@@ -72,49 +54,41 @@ export class MangaController {
       query.search,
     );
   }
-
+  //Find By ID
   @Get(':id')
-  @ApiOperation({ summary: 'Get a manga by ID' })
-  @ApiParam({ name: 'id', format: 'uuid', description: 'Manga UUID' })
-  @ApiOkResponse({ standardSchema: mangaResponseSchema })
-  @ApiNotFoundResponse({
-    description: 'MANGA_NOT_FOUND',
-    standardSchema: apiErrorResponseSchema,
-  })
+  @ApiGetMangaDocs()
   findById(@Param('id', ParseUUIDPipe) id: string) {
     return this.mangaService.findById(id);
   }
 
+  // Create manga
   @Post()
-  @ApiOperation({
-    summary: 'Create a manga',
-    description:
-      'Title and slug are required. Status defaults to ongoing. Unknown fields and null values are rejected.',
-  })
-  @ApiCreatedResponse({ standardSchema: mangaResponseSchema })
-  @ApiConflictResponse({
-    description: 'MANGA_SLUG_ALREADY_EXISTS',
-    standardSchema: apiErrorResponseSchema,
-  })
+  @ApiCreateMangaDocs()
   create(@Body({ schema: createMangaSchema }) dto: CreateMangaDto) {
     return this.mangaService.createManga(dto);
   }
 
+  // Upload manga cover
+  @Post(':id/cover')
+  @UseInterceptors(
+    FileInterceptor('coverImage', {
+      limits: { fileSize: MAX_COVER_SIZE, files: 1, fields: 0 },
+    }),
+  )
+  @ApiUploadMangaCoverDocs()
+  uploadCover(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() coverImage?: Express.Multer.File,
+  ) {
+    if (!coverImage) {
+      throw new BadRequestException('coverImage file is required.');
+    }
+    return this.mangaService.uploadCover(id, coverImage);
+  }
+
+  //upload manga
   @Patch(':id')
-  @ApiOperation({
-    summary: 'Update a manga',
-    description: 'Provide at least one field to update.',
-  })
-  @ApiParam({ name: 'id', format: 'uuid', description: 'Manga UUID' })
-  @ApiOkResponse({ standardSchema: mangaResponseSchema })
-  @ApiNotFoundResponse({
-    description: 'MANGA_NOT_FOUND',
-    standardSchema: apiErrorResponseSchema,
-  })
-  @ApiConflictResponse({
-    description: 'MANGA_SLUG_ALREADY_EXISTS',
-    standardSchema: apiErrorResponseSchema,
-  })
+  @ApiUpdateMangaDocs()
   updateById(
     @Param('id', ParseUUIDPipe) id: string,
     @Body({ schema: updateMangaSchema }) dto: UpdateMangaDto,

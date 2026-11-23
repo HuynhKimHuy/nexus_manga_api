@@ -11,26 +11,9 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import {
-  ApiBadRequestResponse,
-  ApiConflictResponse,
-  ApiCreatedResponse,
-  ApiInternalServerErrorResponse,
-  ApiNoContentResponse,
-  ApiNotFoundResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
 import { BusinessException } from '../../common/exeptions/bussines.exeption.js';
-import { apiErrorResponseSchema } from '../../common/filter/errors/api-error.schema.js';
 import { ErrorCode } from '../../common/filter/errors/error-code.js';
 import { ChapterService } from './chapter.service.js';
-import {
-  chapterResponseSchema,
-  paginatedChaptersResponseSchema,
-} from './dto/chapter-response.schema.js';
 import {
   createChapterBodySchema,
   type CreateChapterBodyDto,
@@ -43,31 +26,22 @@ import {
   updateChapterBodySchema,
   type UpdateChapterBodyDto,
 } from './dto/update-chapter.dto.js';
+import {
+  ApiChapterControllerDocs,
+  ApiCreateChapterDocs,
+  ApiDeleteChapterDocs,
+  ApiGetChapterDocs,
+  ApiListChaptersDocs,
+  ApiUpdateChapterDocs,
+} from './docs/chapter.swagger.js';
 
 @Controller('mangas/:mangaId/chapters')
-@ApiTags('Chapters')
-@ApiParam({ name: 'mangaId', format: 'uuid', description: 'Manga UUID' })
-@ApiBadRequestResponse({
-  description:
-    'VALIDATION_FAILED for invalid input, or BAD_REQUEST for an invalid UUID.',
-  standardSchema: apiErrorResponseSchema,
-})
-@ApiNotFoundResponse({
-  description: 'MANGA_NOT_FOUND or CHAPTER_NOT_FOUND',
-  standardSchema: apiErrorResponseSchema,
-})
-@ApiInternalServerErrorResponse({
-  description: 'INTERNAL_ERROR',
-  standardSchema: apiErrorResponseSchema,
-})
+@ApiChapterControllerDocs()
 export class ChapterController {
   constructor(private readonly chapterService: ChapterService) {}
 
   @Get()
-  @ApiOperation({
-    summary: 'List chapters of a manga with pagination and status filter',
-  })
-  @ApiOkResponse({ standardSchema: paginatedChaptersResponseSchema })
+  @ApiListChaptersDocs()
   findPaginated(
     @Param('mangaId', ParseUUIDPipe) mangaId: string,
     @Query({ schema: chapterPaginationQuerySchema })
@@ -82,9 +56,7 @@ export class ChapterController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a chapter of a manga' })
-  @ApiParam({ name: 'id', format: 'uuid', description: 'Chapter UUID' })
-  @ApiOkResponse({ standardSchema: chapterResponseSchema })
+  @ApiGetChapterDocs()
   async findById(
     @Param('mangaId', ParseUUIDPipe) mangaId: string,
     @Param('id', ParseUUIDPipe) id: string,
@@ -99,16 +71,7 @@ export class ChapterController {
   }
 
   @Post()
-  @ApiOperation({
-    summary: 'Create a chapter in a manga',
-    description:
-      'Manga ID comes from the URL. Number is a decimal string. Status defaults to draft.',
-  })
-  @ApiCreatedResponse({ standardSchema: chapterResponseSchema })
-  @ApiConflictResponse({
-    description: 'CHAPTER_NUMBER_ALREADY_EXISTS',
-    standardSchema: apiErrorResponseSchema,
-  })
+  @ApiCreateChapterDocs()
   create(
     @Param('mangaId', ParseUUIDPipe) mangaId: string,
     @Body({ schema: createChapterBodySchema }) dto: CreateChapterBodyDto,
@@ -117,16 +80,7 @@ export class ChapterController {
   }
 
   @Patch(':id')
-  @ApiOperation({
-    summary: 'Update a chapter of a manga',
-    description: 'Provide at least one field. Manga ID comes from the URL.',
-  })
-  @ApiParam({ name: 'id', format: 'uuid', description: 'Chapter UUID' })
-  @ApiOkResponse({ standardSchema: chapterResponseSchema })
-  @ApiConflictResponse({
-    description: 'CHAPTER_NUMBER_ALREADY_EXISTS',
-    standardSchema: apiErrorResponseSchema,
-  })
+  @ApiUpdateChapterDocs()
   async updateById(
     @Param('mangaId', ParseUUIDPipe) mangaId: string,
     @Param('id', ParseUUIDPipe) id: string,
@@ -138,9 +92,7 @@ export class ChapterController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a chapter of a manga' })
-  @ApiParam({ name: 'id', format: 'uuid', description: 'Chapter UUID' })
-  @ApiNoContentResponse({ description: 'Chapter deleted.' })
+  @ApiDeleteChapterDocs()
   async deleteById(
     @Param('mangaId', ParseUUIDPipe) mangaId: string,
     @Param('id', ParseUUIDPipe) id: string,
