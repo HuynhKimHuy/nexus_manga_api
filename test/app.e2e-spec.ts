@@ -1,19 +1,27 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { App } from 'supertest/types.js';
-import { AppModule } from './../src/app.module.js';
+import type { App } from 'supertest/types.js';
+import {
+  createPostgresTestApp,
+  postgresTestsEnabled,
+} from './helpers/postgres-test-app.js';
 
-describe('AppController (e2e)', () => {
+describe.skipIf(!postgresTestsEnabled)('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+  beforeAll(async () => {
+    app = await createPostgresTestApp();
+  }, 30000);
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+  it('/health (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ok');
+        expect(typeof body.timestamp).toBe('string');
+        expect(body.uptimeSeconds).toBeGreaterThanOrEqual(0);
+      });
   });
 
   it('/ (GET)', () => {
@@ -23,7 +31,14 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('/debug/db (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/debug/db')
+      .expect(200)
+      .expect([{ result: 1 }]);
+  });
+
+  afterAll(async () => {
+    await app?.close();
   });
 });

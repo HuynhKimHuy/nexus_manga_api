@@ -72,6 +72,14 @@ jobs:
       - name: Run unit tests
         run: npm test
       - name: Run e2e tests with PostgreSQL
+        env:
+          RUN_DB_TESTS: '1'
+          # These database tests bootstrap R2 providers but do not call R2.
+          R2_ACCOUNT_ID: ci-test-account
+          R2_ACCESS_KEY_ID: ci-test-access-key
+          R2_SECRET_ACCESS_KEY: ci-test-secret-key
+          R2_BUCKET_NAME: ci-test-bucket
+          R2_PUBLIC_URL: https://images.example.com
         run: npm run test:e2e
       - name: Build Docker image
         run: docker build --progress=plain -t nexus-manga-api:ci .

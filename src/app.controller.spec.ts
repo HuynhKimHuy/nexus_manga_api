@@ -30,6 +30,17 @@ describe('AppController', () => {
     });
   });
 
+  describe('getHealth', () => {
+    it('should return a basic health status', () => {
+      const result = appController.getHealth();
+
+      expect(result.status).toBe('ok');
+      expect(new Date(result.timestamp).toISOString()).toBe(result.timestamp);
+      expect(result.uptimeSeconds).toBeGreaterThanOrEqual(0);
+      expect(query).not.toHaveBeenCalled();
+    });
+  });
+
   describe('checkDb', () => {
     it('should execute the database health query and return its result', async () => {
       const result = [{ result: 1 }];

@@ -31,21 +31,40 @@
 $ npm install
 ```
 
-Run commands from the `nexus-manga-api` directory. `ConfigModule` loads
-`nexus-manga-api/.env` first, then falls back to `../.env` in the workspace.
-Existing process environment variables take precedence. These paths work in both
-development and compiled builds. To use a backend-local environment file, copy
-`.env.example` to `.env`. `PORT` is required and must be an integer from `1` to
-`65535`; the example uses `3000`.
+Run commands from the `nexus-manga-api` directory. `ConfigModule` loads the
+backend-local `.env`; existing process environment variables take precedence.
+To create it, copy `.env.example` to `.env`. `PORT` is required and must be an
+integer from `1` to `65535`; the example uses `3000`.
 
-The workspace `.env.example` includes the PostgreSQL settings used by both
-Docker Compose and the API. Set these values in the workspace `.env`.
+The backend `.env.example` includes the PostgreSQL settings used by both Docker
+Compose and the API. Set these values in `nexus-manga-api/.env`.
 PostgreSQL is published at `127.0.0.1:5544` and listens on `5432` inside the
 container. `POSTGRES_PORT` is the host port; keep it at `5544` when another local
 database uses `5432`. The environment schema validates all `POSTGRES_*` settings.
-From the workspace directory, use `docker compose up -d postgres` to create or
-update the container, `docker compose stop postgres` to stop it, and
-`docker compose start postgres` to start it again. Automatic restart is disabled.
+From this directory, use `docker compose up -d postgres` to create or update the
+container, `docker compose stop postgres` to stop it, and `docker compose start
+postgres` to start it again. Automatic restart is disabled.
+
+## Run with Docker
+
+Build from the backend directory:
+
+```bash
+docker build -f dockerfile -t nexus-manga-api .
+docker run --rm --env-file .env -p 3000:3000 nexus-manga-api
+```
+
+Create `.env` from `.env.example` and set `POSTGRES_HOST` and `POSTGRES_PORT`
+to a PostgreSQL address reachable from the container. `127.0.0.1` inside the
+API container refers to that container. When sharing a Docker network with the
+workspace PostgreSQL service, use `POSTGRES_HOST=postgres` and
+`POSTGRES_PORT=5432`, and pass `--network <network-name>` to `docker run`.
+
+The image runs compiled JavaScript as the unprivileged `node` user and includes
+only production dependencies. Environment files are excluded from the image.
+Apply database migrations separately before starting the API; the existing
+`npm run migration:run` command runs from the backend directory with development
+dependencies installed and database connection variables set.
 
 ## Database migrations
 
@@ -73,8 +92,9 @@ npm run migration:generate -- src/database/migrations/UpdateMangas
 Migration files in `src/database/migrations` are discovered automatically. The
 scripts run TypeScript directly with the ESM loader; no build is required.
 `migration:create` works without a database connection. The other commands need
-PostgreSQL running. Before using `migration:generate`, register your entities in
-`src/database/data-source.ts`; its `entities` array is currently empty.
+PostgreSQL running. The `Mangas` entity is registered in both
+`src/database/data-source.ts` and `src/app.module.ts`. Register future entities
+in both configurations before using them or generating migrations.
 
 ## Code checks and formatting
 
@@ -105,6 +125,21 @@ $ npm run start:dev
 # production mode
 $ npm run start:prod
 ```
+
+## API documentation (Swagger)
+
+After starting the API (`npm run start:dev`), open:
+
+- Swagger UI: <http://localhost:3000/docs>
+- OpenAPI JSON: <http://localhost:3000/docs-json>
+- OpenAPI YAML: <http://localhost:3000/docs-yaml>
+
+Use the configured `PORT` if it differs from `3000`. Swagger UI includes
+**Try it out** for calling the running API. Documentation covers the app routes
+and manga list/detail/create/update endpoints, including query parameters,
+request examples, responses, and error formats. Request schemas are generated
+from the same Zod schemas used for validation by NestJS Swagger's native Standard
+Schema support. Setup is in `src/config/swagger.config.ts`.
 
 ## Run tests
 

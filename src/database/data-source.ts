@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { DataSource } from 'typeorm';
 import { envFilePaths } from '../config/env.paths.js';
 import { envSchema } from '../config/env.schema.js';
+import { Mangas } from '../modules/mangas/mangas.entity.js';
 
 for (const path of envFilePaths) {
   if (existsSync(path)) {
@@ -22,7 +23,7 @@ export default new DataSource({
   password: env.POSTGRES_PASSWORD,
   database: env.POSTGRES_DB,
 
-  entities: [],
+  entities: [Mangas],
   synchronize: false,
   migrationsRun: false,
 
