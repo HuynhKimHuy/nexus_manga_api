@@ -31,21 +31,19 @@
 $ npm install
 ```
 
-Run commands from the `nexus-manga-api` directory. `ConfigModule` loads
-`nexus-manga-api/.env` first, then falls back to `../.env` in the workspace.
-Existing process environment variables take precedence. These paths work in both
-development and compiled builds. To use a backend-local environment file, copy
-`.env.example` to `.env`. `PORT` is required and must be an integer from `1` to
-`65535`; the example uses `3000`.
+Run commands from the `nexus-manga-api` directory. `ConfigModule` loads the
+backend-local `.env`; existing process environment variables take precedence.
+To create it, copy `.env.example` to `.env`. `PORT` is required and must be an
+integer from `1` to `65535`; the example uses `3000`.
 
-The workspace `.env.example` includes the PostgreSQL settings used by both
-Docker Compose and the API. Set these values in the workspace `.env`.
+The backend `.env.example` includes the PostgreSQL settings used by both Docker
+Compose and the API. Set these values in `nexus-manga-api/.env`.
 PostgreSQL is published at `127.0.0.1:5544` and listens on `5432` inside the
 container. `POSTGRES_PORT` is the host port; keep it at `5544` when another local
 database uses `5432`. The environment schema validates all `POSTGRES_*` settings.
-From the workspace directory, use `docker compose up -d postgres` to create or
-update the container, `docker compose stop postgres` to stop it, and
-`docker compose start postgres` to start it again. Automatic restart is disabled.
+From this directory, use `docker compose up -d postgres` to create or update the
+container, `docker compose stop postgres` to stop it, and `docker compose start
+postgres` to start it again. Automatic restart is disabled.
 
 ## Run with Docker
 

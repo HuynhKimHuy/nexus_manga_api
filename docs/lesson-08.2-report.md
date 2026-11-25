@@ -132,11 +132,11 @@ Wrapper đã chạy để nạp credentials từ environment file hiện có mà
 
 ```bash
 NODE_ENV=test POSTGRES_DB=nexus_manga_test RUN_DB_TESTS=1 \
-node --env-file=../.env --input-type=module -e \
+node --env-file=.env --input-type=module -e \
 'import { spawnSync } from "node:child_process"; const result = spawnSync("npm", ["run", "migration:run"], { stdio: "inherit", env: process.env }); process.exit(result.status ?? 1);'
 
 NODE_ENV=test POSTGRES_DB=nexus_manga_test RUN_DB_TESTS=1 \
-node --env-file=../.env --input-type=module -e \
+node --env-file=.env --input-type=module -e \
 'import { spawnSync } from "node:child_process"; const result = spawnSync("npm", ["run", "test:e2e"], { stdio: "inherit", env: process.env }); process.exit(result.status ?? 1);'
 ```
 

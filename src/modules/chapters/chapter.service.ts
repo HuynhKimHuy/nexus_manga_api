@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 import { BusinessException } from '../../common/exeptions/bussines.exeption.js';
 import { ErrorCode } from '../../common/filter/errors/error-code.js';
@@ -67,6 +67,11 @@ export class ChapterService {
   }
 
   async createChapter(dto: CreateChapterDto): Promise<Chapters> {
+    if (dto.status === 'published') {
+      throw new BadRequestException(
+        'Create a draft chapter, upload its pages, then publish.',
+      );
+    }
     const manga = await this.mangaRepo.findById(dto.mangaId);
     if (!manga) {
       throw new BusinessException(ErrorCode.MANGA_NOT_FOUND, {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, type DeleteResult, type UpdateResult } from 'typeorm';
 import { Chapters, type ChapterStatus } from '../chapters.entity.js';
@@ -50,6 +50,32 @@ export class ChapterRepo {
   }
 
   async updateById(id: string, dto: UpdateChapterDto): Promise<UpdateResult> {
+    if (dto.status === 'published') {
+      return this.chapterRepo.manager.transaction(async (manager) => {
+        const chapter = await manager.findOne(Chapters, {
+          where: { id },
+          lock: { mode: 'pessimistic_write' },
+        });
+        if (!chapter) return manager.update(Chapters, id, dto);
+        const pages: { page_number: number; upload_status: string }[] =
+          await manager.query(
+            'SELECT page_number, upload_status FROM tbl_chapter_pages WHERE chapter_id = $1 ORDER BY page_number ASC',
+            [id],
+          );
+        if (
+          !pages.length ||
+          pages.some(
+            (page, index) =>
+              page.page_number !== index + 1 || page.upload_status !== 'ready',
+          )
+        ) {
+          throw new BadRequestException(
+            'Publish requires ready pages numbered consecutively from 1.',
+          );
+        }
+        return manager.update(Chapters, id, dto);
+      });
+    }
     return this.chapterRepo.update(id, dto);
   }
 

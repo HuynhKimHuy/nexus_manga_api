@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { SchemaObject } from '@nestjs/swagger';
 import type { MangaStatus } from '../mangas.entity.js';
 
 export const createMangaSchema = z
@@ -33,3 +34,23 @@ export const createMangaSchema = z
   });
 
 export type CreateMangaDto = z.infer<typeof createMangaSchema>;
+
+// Swagger adds the file input; regular body validation still uses createMangaSchema.
+const mangaBodySchema = z.toJSONSchema(createMangaSchema, {
+  target: 'openapi-3.0',
+}) as SchemaObject;
+
+export const createMangaRequestSchema: SchemaObject = {
+  ...mangaBodySchema,
+  properties: {
+    ...mangaBodySchema.properties,
+    coverImage: {
+      oneOf: [
+        { type: 'string', format: 'binary' },
+        { type: 'string', format: 'uri', maxLength: 500 },
+      ],
+      description:
+        'Optional JPEG, PNG or WebP file (max 5 MiB), or an HTTP URL. Do not send both.',
+    },
+  },
+};
